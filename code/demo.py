@@ -3,6 +3,11 @@ import torch
 import torchvision
 from torchvision import transforms
 
+import matplotlib.pyplot as plt
+from torchvision.utils import make_grid
+
+
+
 
 import numpy as np
 from arguments import args
@@ -34,6 +39,19 @@ class dataset(torch.utils.data.Dataset):
         else:
             return (self.trans(self.x[idx]), self.y[idx])  
 
+def imshow(inp, title=None):
+    """Imshow for Tensor."""
+    inp = inp.numpy().transpose((1, 2, 0))
+    mean = 0.5
+    std = 0.5
+    inp = std * inp + mean
+    inp = np.clip(inp, 0, 1)
+    plt.imshow(inp, cmap='gray')
+    if title is not None:
+        plt.title(title)
+    plt.pause(0.001)
+
+
 def main_worker():
 
     train_transform = transforms.Compose([
@@ -57,7 +75,7 @@ def main_worker():
     import medmnist 
     from medmnist import INFO, Evaluator
     #root = '/scratch/group/optmai/zhishguo/med/'
-    root = 'C:/Users/Jakey/Desktop/Spring2024/CSCE421/FinalProject/data/'
+    root = 'C:/Users/Jakey/Desktop/Spring2024/CSCE421/Final-Project/data/'
     # ==================== ADD YOUR ROOT HERE ==================== 
     #root = ''
     info = INFO[args.data]
@@ -94,14 +112,24 @@ def main_worker():
 
         train_dataset = dataset(train_data, train_labels, trans=train_transform)
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.train_batchsize, shuffle=True, num_workers=0)
+
+        '''
+        #Visualize training data after processing
+        inputs, classes = next(iter(train_loader))
+        out = make_grid(inputs)
+        imshow(out, title=[str(x.item()) for x in classes])
+        plt.show()
+        '''
  
     from libauc.models import resnet18 as ResNet18
+    #from libauc.models import resnet50 as ResNet50
     from libauc.losses import AUCMLoss
     
     from torch.nn import BCELoss 
     from torch.optim import SGD
     from libauc.optimizers import PESG 
     net = ResNet18(pretrained=False) 
+    #net = ResNet50(pretrained=False)
     net = net.cuda()  
     
     if args.loss == "CrossEntropy" or args.loss == "CE" or args.loss == "BCE":
@@ -120,6 +148,7 @@ def main_worker():
         evaluate(net, test_loader) 
 
 def train(net, train_loader, test_loader, loss_fn, optimizer, epochs):
+    bestAUC = 0
     for e in range(epochs):
         net.train()
         for data, targets in train_loader:
@@ -136,7 +165,16 @@ def train(net, train_loader, test_loader, loss_fn, optimizer, epochs):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-        evaluate(net, test_loader, epoch=e)  
+        '''
+        #Best model saving
+        currAUC = evaluate(net, test_loader, epoch=e)
+
+        if currAUC > bestAUC:
+            bestAUC = currAUC
+            torch.save(net.state_dict(), f"saved_model/best_model_epoch_{e}.pth")
+            print(f"Saved new best model with AUC: {bestAUC} at epoch {e}")
+        '''
+        evaluate(net, test_loader, epoch=e)
   
 def evaluate(net, test_loader, epoch=-1):
     # Testing AUC
@@ -152,8 +190,11 @@ def evaluate(net, test_loader, epoch=-1):
     test_label = torch.cat(label_list)
     test_score = torch.cat(score_list)
                    
-    test_auc = metrics.roc_auc_score(test_label, test_score)                   
-    print("Epoch:" + str(epoch) + "Test AUC: " + str(test_auc), flush=True)
+    testAUC = metrics.roc_auc_score(test_label, test_score)                   
+    print("Epoch:" + str(epoch) + "Test AUC: " + str(testAUC), flush=True)
+
+    #Best model saving
+    #return testAUC
      
 if __name__ == "__main__":
     main_worker()

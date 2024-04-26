@@ -25,3 +25,5 @@ python3 demo.py --data=breastmnist --task_index=0 --pos_class=0 --epochs=100
 sleep 5 
 
 ## --data=breastmnist --data=pneumoniamnist
+python3 demo.py --data=pneumoniamnist --task_index=0 --pos_class=0 --epochs=100
+sleep 5 

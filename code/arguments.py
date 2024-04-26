@@ -4,7 +4,7 @@ import torch
 parser = argparse.ArgumentParser()
 parser.add_argument('--loss', type=str, default="AUCM")
 parser.add_argument('--train_batchsize', type=int, default=32)
-parser.add_argument('--epochs', type=int, default=10) 
+parser.add_argument('--epochs', type=int, default=1) 
 parser.add_argument('--lr', type=float, default=0.1) 
 parser.add_argument('--margin', type=float, default=1.0)
 parser.add_argument('--eval_only', type=int, default=0)
