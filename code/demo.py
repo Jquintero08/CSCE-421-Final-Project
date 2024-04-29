@@ -3,6 +3,8 @@ import torch
 import torchvision
 from torchvision import transforms
 
+from torch.utils.data import WeightedRandomSampler
+
 import matplotlib.pyplot as plt
 from torchvision.utils import make_grid
 
@@ -57,8 +59,8 @@ def main_worker():
     train_transform = transforms.Compose([
         transforms.ToPILImage(),
         transforms.Grayscale(3),
-        transforms.RandomHorizontalFlip(), #Horizontal Flip Augmentaton
-        transforms.RandomRotation(45), #45 Degree Rotation Augmentation
+        #transforms.RandomHorizontalFlip(), #Horizontal Flip Augmentaton
+        #transforms.RandomRotation(45), #45 Degree Rotation Augmentation
         transforms.Resize((32, 32)), 
         transforms.ToTensor(),
         transforms.Normalize(0.5, 0.5),
@@ -111,7 +113,43 @@ def main_worker():
         train_labels = torch.tensor(train_labels) 
 
         train_dataset = dataset(train_data, train_labels, trans=train_transform)
+
+        #Undersampling Code
+        #Count # of instances in each class
+        class_counts = torch.bincount(train_labels)
+        minClassCount = torch.min(class_counts).item()
+
+        #Indices - each class
+        classIndices = [torch.where(train_labels == i)[0] for i in range(2)]
+
+        #Randomly sample from majority class
+        usampIndices = torch.cat([indices[torch.randperm(len(indices))[:minClassCount]] for indices in classIndices])
+
+        #New dataset with undersampled indices
+        usamp_Data = train_data[usampIndices]
+        usamLabels = train_labels[usampIndices]
+
+
+        train_dataset = dataset(usamp_Data, usamLabels, trans=train_transform)
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.train_batchsize, shuffle=True, num_workers=0)
+
+
+        #Oversampling Code
+        '''
+        train_labels_binary = (train_labels == args.pos_class).to(torch.bool)
+        class_counts = torch.bincount(train_labels)
+        class_weights = 1. / class_counts.float()
+        sample_weights = class_weights[train_labels_binary.to(torch.long)]
+        
+        sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_weights), replacement=True)
+
+        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.train_batchsize, shuffle=False, sampler=sampler, num_workers=0)
+        '''
+
+
+
+        #Comment out if Oversampling or Undersampling
+        #train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.train_batchsize, shuffle=True, num_workers=0)
 
         '''
         #Visualize training data after processing
@@ -120,6 +158,7 @@ def main_worker():
         imshow(out, title=[str(x.item()) for x in classes])
         plt.show()
         '''
+        
  
     from libauc.models import resnet18 as ResNet18
     #from libauc.models import resnet50 as ResNet50
@@ -165,7 +204,7 @@ def train(net, train_loader, test_loader, loss_fn, optimizer, epochs):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-        '''
+        
         #Best model saving
         currAUC = evaluate(net, test_loader, epoch=e)
 
@@ -173,8 +212,8 @@ def train(net, train_loader, test_loader, loss_fn, optimizer, epochs):
             bestAUC = currAUC
             torch.save(net.state_dict(), f"saved_model/best_model_epoch_{e}.pth")
             print(f"Saved new best model with AUC: {bestAUC} at epoch {e}")
-        '''
-        evaluate(net, test_loader, epoch=e)
+        
+        #evaluate(net, test_loader, epoch=e)
   
 def evaluate(net, test_loader, epoch=-1):
     # Testing AUC
@@ -194,7 +233,7 @@ def evaluate(net, test_loader, epoch=-1):
     print("Epoch:" + str(epoch) + "Test AUC: " + str(testAUC), flush=True)
 
     #Best model saving
-    #return testAUC
+    return testAUC
      
 if __name__ == "__main__":
     main_worker()
