@@ -15,6 +15,8 @@ parser.add_argument('--data', type=str, default="breastmnist")
 parser.add_argument('--server', type=str, default="faster")
 parser.add_argument('--pos_class', type=int, default=0)
 parser.add_argument('--task_index', type=int, default=0)
+parser.add_argument('--roc_plot', type=str, default=None)
+parser.add_argument('--model_dir', type=str, default='saved_model/')
 
 
 args = parser.parse_args()

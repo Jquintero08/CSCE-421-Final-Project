@@ -164,8 +164,13 @@ def main_worker():
         imshow(out, title=[str(x.item()) for x in classes])
         plt.show()
         '''
-        
- 
+    
+    # python demo.py --roc_plot=plot.png
+    # python demo.py --roc_plot=plot.png --model_dir=saved_model/
+    if args.roc_plot:
+        roc_curve(test_loader, args.model_dir, args.roc_plot)
+        return
+
     from libauc.models import resnet18 as ResNet18
     #from libauc.models import resnet50 as ResNet50
     from libauc.losses import AUCMLoss
@@ -241,5 +246,50 @@ def evaluate(net, test_loader, epoch=-1):
     #Best model saving
     return testAUC
      
+def roc_curve(test_loader, model_dir, plot_name):
+    import torch
+    import os
+    from pathlib import Path
+    import sklearn.metrics
+    from libauc.models import resnet18 as ResNet18
+
+    model_files = [Path(model_dir) / f for f in os.listdir(model_dir) if f.endswith('.pth')]
+
+    fprs = list()
+    tprs = list()
+
+    for f in model_files:
+        model = ResNet18()
+        model.load_state_dict(torch.load(f))
+
+        model.eval() 
+        score_list = list()
+        label_list = list()
+        for data, targets in test_loader:
+            data, targets = data.to(device), targets.to(device)
+                    
+            score = model(data).detach().clone().cpu()
+            score_list.append(score)
+            label_list.append(targets.cpu()) 
+        test_label = torch.cat(label_list)
+        test_score = torch.cat(score_list)
+        # predictions
+        fpr,tpr, _ = metrics.roc_curve(test_label, test_score)
+        fprs.append(fpr)
+        tprs.append(tpr)
+
+    plt.figure(figsize=(8, 6))
+    for fpr, tpr, f in zip(fprs, tprs, model_files):
+        roc_auc = metrics.auc(fpr,tpr)
+        plt.plot(fpr, tpr,label=f'{f.stem} (AUC = {roc_auc:.5f})')
+    plt.plot([0,1],[0,1],linestyle='--',color='gray',label='Random')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title(f'ROC Curve - {Path(plot_name).stem}')
+    plt.legend(loc='upper left', bbox_to_anchor=(1.05, 1))
+    plt.grid(True)
+    plt.savefig(plot_name, bbox_inches='tight')
+    print(f'ROC Curve saved to {plot_name}')
+
 if __name__ == "__main__":
     main_worker()
