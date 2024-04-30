@@ -17,6 +17,11 @@ from sklearn import metrics
 torch.backends.cudnn.deterministic=True
 torch.backends.cudnn.benchmark=False
 torch.manual_seed(2024)
+if torch.cuda.is_available():
+  device = torch.device("cuda")
+else:
+  device = torch.device("cpu")
+
 np.random.seed(2024)
 
 if args.server == "grace":
@@ -77,7 +82,8 @@ def main_worker():
     import medmnist 
     from medmnist import INFO, Evaluator
     #root = '/scratch/group/optmai/zhishguo/med/'
-    root = 'C:/Users/Jakey/Desktop/Spring2024/CSCE421/Final-Project/data/'
+    # root = 'C:/Users/Jakey/Desktop/Spring2024/CSCE421/Final-Project/data/'
+    root = '../data' # have to run in code/ folder
     # ==================== ADD YOUR ROOT HERE ==================== 
     #root = ''
     info = INFO[args.data]
@@ -169,7 +175,7 @@ def main_worker():
     from libauc.optimizers import PESG 
     net = ResNet18(pretrained=False) 
     #net = ResNet50(pretrained=False)
-    net = net.cuda()  
+    net = net.to(device)  
     
     if args.loss == "CrossEntropy" or args.loss == "CE" or args.loss == "BCE":
         loss_fn = BCELoss() 
@@ -194,7 +200,7 @@ def train(net, train_loader, test_loader, loss_fn, optimizer, epochs):
             #print("data[0].shape: " + str(data[0].shape))
             #exit() 
             targets = targets.to(torch.float32)
-            data, targets = data.cuda(), targets.cuda()
+            data, targets = data.to(device), targets.to(device)
             logits = net(data)
             preds = torch.flatten(torch.sigmoid(logits))
             #print("torch.sigmoid(logits):" + str(torch.sigmoid(logits)), flush=True)
@@ -221,7 +227,7 @@ def evaluate(net, test_loader, epoch=-1):
     score_list = list()
     label_list = list()
     for data, targets in test_loader:
-        data, targets = data.cuda(), targets.cuda()
+        data, targets = data.to(device), targets.to(device)
                 
         score = net(data).detach().clone().cpu()
         score_list.append(score)
