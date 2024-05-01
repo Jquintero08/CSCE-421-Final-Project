@@ -122,7 +122,7 @@ def main_worker():
         train_dataset = dataset(train_data, train_labels, trans=train_transform)
 
         # ============================= Undersampling Code ============================= 
-        '''
+        
         #Count # of instances in each class
         class_counts = torch.bincount(train_labels)
         minClassCount = torch.min(class_counts).item()
@@ -140,7 +140,7 @@ def main_worker():
 
         train_dataset = dataset(usamp_Data, usamLabels, trans=train_transform)
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.train_batchsize, shuffle=True, num_workers=0)
-        '''
+        
 
         # ============================= Oversampling Code ============================= 
         '''
@@ -157,7 +157,7 @@ def main_worker():
 
 
         #Comment out if Oversampling or Undersampling
-        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.train_batchsize, shuffle=True, num_workers=0)
+        #train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.train_batchsize, shuffle=True, num_workers=0)
 
         '''
         #Visualize training data after processing
