@@ -20,7 +20,8 @@ from libauc.losses import AUCMLoss
 
 from torch.nn import BCELoss 
 from torch.optim import SGD
-from libauc.optimizers import PESG 
+from libauc.optimizers import PESG
+import sys 
 
 torch.backends.cudnn.deterministic=True
 torch.backends.cudnn.benchmark=False
@@ -119,7 +120,11 @@ eval_transform = transforms.Compose([
 ])
 
 root = '../data'
-data = 'breastmnist'
+data = sys.argv[1]
+# python CLINICAL.py breastmnist
+# data = 'breastmnist'
+# python CLINICAL.py pneumoniamnist
+# data = 'pneumoniamnist'
 info = INFO[data]
 DataClass = getattr(medmnist, info['python_class'])
 test_dataset = DataClass(split='test', download=True, root=root)

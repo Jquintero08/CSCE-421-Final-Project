@@ -1,0 +1,43 @@
+
+Running Base Model:
+- Breast
+    run `python demo.py --data=breastmnist --task_index=0 --pos_class=0 --epochs=100`
+    Rename the best model in saved_model to Breast_Base.pth
+- Pneumonia
+    run `python demo.py --data=pneumoniamnist --task_index=0 --pos_class=0 --epochs=100`
+    Rename the best model in saved_model to Pneumonia_Base.pth
+
+Running Horizontal Flip and 45 Degree Rotation:
+In demo.py uncomment in `train_transform`:
+```
+#transforms.RandomHorizontalFlip(), #Horizontal Flip Augmentaton
+#transforms.RandomRotation(45), #45 Degree Rotation Augmentation
+```
+Follow the steps for running the base model.
+
+Running Oversampling:
+In demo.py recomment the flip and rotation lines and uncomment the `#Oversampling Code` section.
+Follow the steps for running the base model.
+
+Running Undersampling:
+In demo.py recomment the `#Oversampling Code` section and uncomment the `# Undersampling Code` section.
+Follow the steps for running the base model.
+
+Running CLINICAL:
+- Breast 
+    run `python CLINICAL.py breastmnist`
+    Rename the best model in saved_model to Breast_CLINICAL.pth
+- Pneumonia 
+    run `python CLINICAL.py pneumoniamnist`
+    Rename the best model in saved_model to Pneumonia_CLINICAL.pth
+
+Generating the ROC Curves and table:
+Run all the expiriments first to get the saved models in `saved_model/` named for their respective methods.
+Copy all the Breast models to another folder called `saved_breast_model/`.
+Copy all the Pneumonia models to another folder called `saved_pneumonia_model/`.
+
+run `python demo.py --roc_plot=breast_roc.png --model_dir=saved_breast_model`
+The plot will be in `breast_roc.png` and copy the output to a csv to get the table.
+
+run `python demo.py --roc_plot=pneumonia_roc.png --model_dir=saved_pneumonia_model`
+The plot will be in `pneumonia_roc.png` and copy the output to a csv to get the table.
