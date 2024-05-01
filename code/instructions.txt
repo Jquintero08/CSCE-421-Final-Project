@@ -39,5 +39,5 @@ Copy all the Pneumonia models to another folder called `saved_pneumonia_model/`.
 run `python demo.py --roc_plot=breast_roc.png --model_dir=saved_breast_model`
 The plot will be in `breast_roc.png` and copy the output to a csv to get the table.
 
-run `python demo.py --roc_plot=pneumonia_roc.png --model_dir=saved_pneumonia_model`
+run `python demo.py --roc_plot=pneumonia_roc.png --model_dir=saved_pneumonia_model -data=pneumoniamnist`
 The plot will be in `pneumonia_roc.png` and copy the output to a csv to get the table.

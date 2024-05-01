@@ -65,8 +65,8 @@ def main_worker():
     train_transform = transforms.Compose([
         transforms.ToPILImage(),
         transforms.Grayscale(3),
-        #transforms.RandomHorizontalFlip(), #Horizontal Flip Augmentaton
-        #transforms.RandomRotation(45), #45 Degree Rotation Augmentation
+        #transforms.RandomHorizontalFlip(), # ============================= Horizontal Flip Augmentaton ============================= 
+        #transforms.RandomRotation(45), # ============================= 45 Degree Rotation Augmentation ============================= 
         transforms.Resize((32, 32)), 
         transforms.ToTensor(),
         transforms.Normalize(0.5, 0.5),
@@ -121,7 +121,8 @@ def main_worker():
 
         train_dataset = dataset(train_data, train_labels, trans=train_transform)
 
-        #Undersampling Code
+        # ============================= Undersampling Code ============================= 
+        '''
         #Count # of instances in each class
         class_counts = torch.bincount(train_labels)
         minClassCount = torch.min(class_counts).item()
@@ -139,9 +140,9 @@ def main_worker():
 
         train_dataset = dataset(usamp_Data, usamLabels, trans=train_transform)
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.train_batchsize, shuffle=True, num_workers=0)
+        '''
 
-
-        #Oversampling Code
+        # ============================= Oversampling Code ============================= 
         '''
         train_labels_binary = (train_labels == args.pos_class).to(torch.bool)
         class_counts = torch.bincount(train_labels)
@@ -156,7 +157,7 @@ def main_worker():
 
 
         #Comment out if Oversampling or Undersampling
-        #train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.train_batchsize, shuffle=True, num_workers=0)
+        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.train_batchsize, shuffle=True, num_workers=0)
 
         '''
         #Visualize training data after processing
@@ -262,6 +263,7 @@ def roc_curve(test_loader, model_dir, plot_name):
     for f in model_files:
         model = ResNet18()
         model.load_state_dict(torch.load(f))
+        model = model.to(device)
 
         model.eval() 
         score_list = list()
