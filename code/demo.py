@@ -21,6 +21,7 @@ if torch.cuda.is_available():
   device = torch.device("cuda")
 else:
   device = torch.device("cpu")
+print(device)
 
 np.random.seed(2024)
 
@@ -257,7 +258,7 @@ def roc_curve(test_loader, model_dir, plot_name):
 
     fprs = list()
     tprs = list()
-
+    print('Name,AUC,ACC')
     for f in model_files:
         model = ResNet18()
         model.load_state_dict(torch.load(f))
@@ -275,6 +276,13 @@ def roc_curve(test_loader, model_dir, plot_name):
         test_score = torch.cat(score_list)
         # predictions
         fpr,tpr, _ = metrics.roc_curve(test_label, test_score)
+
+        # Output auc and acc
+        auc = metrics.roc_auc_score(test_label, test_score)
+        test_score = (test_score > 0.5).type(torch.uint8)
+        acc = metrics.accuracy_score(test_label, test_score)
+        print(f'{Path(f).stem},{auc},{acc}')
+
         fprs.append(fpr)
         tprs.append(tpr)
 
