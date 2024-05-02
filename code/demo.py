@@ -86,7 +86,6 @@ def main_worker():
     # root = 'C:/Users/Jakey/Desktop/Spring2024/CSCE421/Final-Project/data/'
     root = '../data' # have to run in code/ folder
     # ==================== ADD YOUR ROOT HERE ==================== 
-    #root = ''
     info = INFO[args.data]
     DataClass = getattr(medmnist, info['python_class'])
     test_dataset = DataClass(split='test', download=True, root=root)
@@ -124,8 +123,8 @@ def main_worker():
         # ============================= Undersampling Code ============================= 
         '''
         #Count # of instances in each class
-        class_counts = torch.bincount(train_labels)
-        minClassCount = torch.min(class_counts).item()
+        cCounts = torch.bincount(train_labels)
+        minClassCount = torch.min(cCounts).item()
 
         #Indices - each class
         classIndices = [torch.where(train_labels == i)[0] for i in range(2)]
@@ -144,10 +143,10 @@ def main_worker():
 
         # ============================= Oversampling Code ============================= 
         '''
-        train_labels_binary = (train_labels == args.pos_class).to(torch.bool)
-        class_counts = torch.bincount(train_labels)
-        class_weights = 1. / class_counts.float()
-        sample_weights = class_weights[train_labels_binary.to(torch.long)]
+        train_labels_bin = (train_labels == args.pos_class).to(torch.bool)
+        cCounts = torch.bincount(train_labels)
+        class_weights = 1. / cCounts.float()
+        sample_weights = class_weights[train_labels_bin.to(torch.long)]
         
         sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_weights), replacement=True)
 
@@ -156,7 +155,7 @@ def main_worker():
 
 
 
-        #Comment out if Oversampling or Undersampling
+        # ============================= Comment out if Oversampling or Undersampling =============================
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.train_batchsize, shuffle=True, num_workers=0)
 
         '''
@@ -229,7 +228,7 @@ def train(net, train_loader, test_loader, loss_fn, optimizer, epochs):
         #evaluate(net, test_loader, epoch=e)
   
 def evaluate(net, test_loader, epoch=-1):
-    # Testing AUC
+    #Testing AUC
     net.eval() 
     score_list = list()
     label_list = list()
@@ -279,7 +278,7 @@ def roc_curve(test_loader, model_dir, plot_name):
         # predictions
         fpr,tpr, _ = metrics.roc_curve(test_label, test_score)
 
-        # Output auc and acc
+        #Output auc and acc
         auc = metrics.roc_auc_score(test_label, test_score)
         test_score = (test_score > 0.5).type(torch.uint8)
         acc = metrics.accuracy_score(test_label, test_score)
